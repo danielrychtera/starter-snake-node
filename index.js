@@ -35,11 +35,59 @@ app.post('/start', (request, response) => {
 
 // Handle POST request to '/move'
 app.post('/move', (request, response) => {
+  const width = request.body.board.width; 
+  const height = request.body.board.height;
   // NOTE: Do something here to generate your move
+  const board = Array(request.body.board.height).fill().map(() =>Array(request.body.board.width).fill(0));
+  const snakes = request.body.board.snakes;
+
+  for (const snake of snakes) {
+    const body = snake.body;
+
+    for (const coord of body) {
+      board[coord.y][coord.x] = -1;
+    }
+  }
+
+  const food = request.body.board.food;
+
+  for (const coord of food) {
+    board[coord.y][coord.x] = 1;
+  }
+
+  const head = request.body.you.body[0];
+  board[head.y][head.x] = "H";
+
+  const x = head.x;
+  const y = head.y;
+
+  const avaliablespots = [{ x: x + 1, y: y}, { x: x - 1, y: y}, { x: x, y: y + 1}, {x: x, y: y - 1}];
+  const goodspots = [];
+  for (const coord of avaliablespots) {
+    if (coord.x >= 0 && coord.x < width) {
+      if (coord.y >= 0 && coord.y < height) {
+        if (board[coord.y][coord.x]!= -1){
+          goodspots.push(coord);
+        }
+      }
+    }
+  }
+
+  const directions = {
+    'up': [0, -1],
+    'down': [0, 1],
+    'right': [1, 0],
+    'left': [-1, 0]
+  };
+  const neighbor = goodspots[Math.floor(Math.random() * goodspots.length)];
+  const move = [neighbor.x - head.x, neighbor.y - head.y];
+  const direction = Object.keys(directions).find(d => {
+    return (directions[d][0] === move[0] && directions[d][1] === move[1]);
+  });
 
   // Response data
   const data = {
-    move: 'up', // one of: ['up','down','left','right']
+    move: direction, // one of: ['up','down','left','right']
   }
 
   return response.json(data)
@@ -64,3 +112,13 @@ app.use(genericErrorHandler)
 app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'))
 })
+
+
+function print_board(board) {
+  for (const y in board) {
+    for (const coord of board[y]) {
+      process.stdout.write(`${coord},`);
+    }
+    console.log();
+  }
+}
