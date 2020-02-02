@@ -72,6 +72,30 @@ app.post('/move', (request, response) => {
       }
     }
   }
+ let closestfood = null;
+ let closestfooddistance = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+
+ for (const coord of food) {
+   const distance =  Math.sqrt(Math.pow(coord.x - head.x, 2) + Math.pow(coord.y - head.y, 2));
+
+   if(distance <= closestfooddistance) {
+     closestfooddistance = distance;
+     closestfood = coord;
+   }
+ }
+
+ let closestgoodspot = null;
+ let closestgoodspotdistance = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
+
+ if (closestfood) {
+  for(const goodspot of goodspots) {
+   const distance =  Math.sqrt(Math.pow(closestfood.x - goodspot.x, 2) + Math.pow(closestfood.y - goodspot.y, 2));
+   if (distance <= closestgoodspotdistance){
+     closestgoodspotdistance = distance;
+     closestgoodspot = goodspot;
+   } 
+  }
+ }
 
   const directions = {
     'up': [0, -1],
@@ -79,11 +103,18 @@ app.post('/move', (request, response) => {
     'right': [1, 0],
     'left': [-1, 0]
   };
-  const neighbor = goodspots[Math.floor(Math.random() * goodspots.length)];
+  let neighbor = null;
+  if (closestgoodspot) {
+    neighbor = closestgoodspot;
+  } else {
+    neighbor = goodspots[Math.floor(Math.random() * goodspots.length)];
+  }
   const move = [neighbor.x - head.x, neighbor.y - head.y];
   const direction = Object.keys(directions).find(d => {
     return (directions[d][0] === move[0] && directions[d][1] === move[1]);
   });
+
+  console.log(direction);
 
   // Response data
   const data = {
