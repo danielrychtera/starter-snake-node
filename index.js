@@ -27,7 +27,7 @@ app.post('/start', (request, response) => {
 
   // Response data
   const data = {
-    color: '#1D8C85',
+    color: '#cc9900',
     headType: 'bendr',
     tailType: 'fat-rattle'
   }
@@ -60,20 +60,14 @@ app.post('/move', (request, response) => {
   const head = request.body.you.body[0];
   board[head.y][head.x] = "H";
 
-  const x = head.x;
-  const y = head.y;
-
-  const avaliablespots = [{ x: x + 1, y: y}, { x: x - 1, y: y}, { x: x, y: y + 1}, {x: x, y: y - 1}];
-  const goodspots = [];
-  for (const coord of avaliablespots) {
-    if (coord.x >= 0 && coord.x < width) {
-      if (coord.y >= 0 && coord.y < height) {
-        if (board[coord.y][coord.x]!= -1){
-          goodspots.push(coord);
-        }
-      }
-    }
-  }
+  // goodspots check
+ let goodspots = spot_check(board, head);
+ for (const goodspot of goodspots) {
+  const spots = spot_check(board, goodspot);
+  if (spots.length === 0) {
+    goodspots = goodspots.filter(g => g !== goodspot);
+  } 
+ }
  let closestfood = null;
  let closestfooddistance = Math.sqrt(Math.pow(width, 2) + Math.pow(height, 2));
 
@@ -146,6 +140,26 @@ app.listen(app.get('port'), () => {
   console.log('Server listening on port %s', app.get('port'))
 })
 
+function spot_check(board, coord) {
+  const avaliablespots = [
+    { x: coord.x + 1, y: coord.y },
+    { x: coord.x - 1, y: coord.y },
+    { x: coord.x, y: coord.y + 1 },
+    { x: coord.x, y: coord.y - 1 }
+  ];
+  const goodspots = [];
+  for (const spot of avaliablespots) {
+    if (spot.x >= 0 && spot.x < board[0].length) {
+      if (spot.y >= 0 && spot.y < board.length) {
+        if (board[spot.y][spot.x] !== -1 && board[spot.y][spot.x] !== 'H'){
+          goodspots.push(spot);
+        }
+      }
+    }
+  }
+
+  return goodspots;
+}
 
 function print_board(board) {
   for (const y in board) {
